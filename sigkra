@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduSense - Cuaca & Gempa</title>
+
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; background: #eef2f3; }
+    header { background: #2563eb; color: white; padding: 20px; text-align: center; }
+    .container { padding: 20px; max-width: 900px; margin: auto; }
+    .card { background: white; padding: 20px; margin-top: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    input { padding:10px; width:70%; border-radius:8px; border:1px solid #aaa; }
+    button { background:#2563eb; color:white; padding:10px 16px; border:none; border-radius:8px; cursor:pointer; }
+    iframe { width: 100%; height: 300px; border-radius: 12px; margin-top:10px; display:none; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🌍 EduSense - Cuaca & Gempa</h1>
+    <p>Data realtime dari OpenWeather + BMKG</p>
+  </header>
+
+  <div class="container">
+
+    <!-- CUACA -->
+    <div class="card">
+      <h2>☀ Cuaca Daerahmu</h2>
+      <input id="kota" placeholder="Masukkan kota, contoh: Jombang">
+      <button onclick="getWeather()">Cek Cuaca</button>
+      <p id="weatherResult"></p>
+    </div>
+
+    <!-- GEMPA -->
+    <div class="card">
+      <h2>🌋 Gempa Terbaru (BMKG)</h2>
+      <button onclick="getGempa()">Tampilkan</button>
+      <p id="gempaResult"></p>
+      <iframe id="map"></iframe>
+    </div>
+
+    <!-- EDUKASI -->
+    <div class="card">
+      <h2>📘 Edukasi Kebencanaan</h2>
+      <ul>
+        <li>Gempa kecil ( < 5 SR ) biasanya tidak berbahaya.</li>
+        <li>Jika di dalam ruangan saat gempa → lindungi kepala & cari tempat aman.</li>
+        <li>Jika di luar ruangan → jauhi bangunan.</li>
+        <li>Cuaca ekstrim sering muncul saat pancaroba.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script>
+
+    // ==== CUACA ====
+    async function getWeather() {
+      const kota = document.getElementById("kota").value;
+      const apiKey = "b6907d289e10d714a6e88b30761fae22"; // API demo resmi OpenWeather
+
+      const url = `https://corsproxy.io/?${encodeURIComponent(
+        https://api.openweathermap.org/data/2.5/weather?q=${kota}&units=metric&lang=id&appid=${apiKey}
+      )}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        document.getElementById("weatherResult").innerHTML = `
+          Suhu: <b>${data.main.temp}°C</b><br>
+          Cuaca: <b>${data.weather[0].description}</b>
+        `;
+      } catch {
+        document.getElementById("weatherResult").innerHTML = "⚠ Cuaca tidak bisa diambil.";
+      }
+    }
+
+    // ==== GEMPA BMKG ====
+    async function getGempa() {
+      const url = "https://corsproxy.io/?" +
+        encodeURIComponent("https://data.bmkg.go.id/DataMKG/TEWS/gempaterkini.json");
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        const g = data.Infogempa.gempa;
+
+        document.getElementById("gempaResult").innerHTML = `
+          Waktu: <b>${g.Tanggal} ${g.Jam}</b><br>
+          Magnitudo: <b>${g.Magnitude}</b><br>
+          Kedalaman: <b>${g.Kedalaman}</b><br>
+          Lokasi: <b>${g.Wilayah}</b>
+        `;
+
+        const lat = g.Lintang.replace(" LS", "").replace(" LU", "");
+        const lon = g.Bujur.replace(" BT", "").replace(" BB", "");
+
+        const map = document.getElementById("map");
+        map.style.display = "block";
+        map.src = https://www.google.com/maps?q=${lat},${lon}&hl=id&z=6&output=embed;
+
+      } catch {
+        document.getElementById("gempaResult").innerHTML = "⚠ Tidak bisa mengambil data BMKG.";
+      }
+    }
+
+  </script>
+
+</body>
+</html>
